@@ -1,0 +1,19 @@
+# Models & Binaries
+*.gguf
+*.bin
+*.onnx
+*.pt
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+
+# Environment & Credentials
+.env
+.env.local
+
+# Build Outputs & Logs
+dist/
+build/
+*.log
