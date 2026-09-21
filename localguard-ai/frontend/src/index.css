@@ -1900,3 +1900,311 @@ textarea, input { font-family: inherit; }
   }
   .zdb-acc-chevron { display: none !important; }
 }
+
+/* =====================================================================
+   v2.5 — Motion pass. Pure CSS, targets existing class names only.
+   No JSX/markup changes required. Respects prefers-reduced-motion
+   (see the existing @media query above, which this section inherits).
+   ===================================================================== */
+
+/* ---------- Landing hero: gentle entrance + ambient glow ---------- */
+
+.landing-inner { animation: rise 0.7s var(--cd-ease, ease-out) both; }
+.brand-mark { animation: rise 0.6s ease-out both; }
+.hero-headline { animation: rise 0.7s ease-out 0.05s both; }
+.hero-sub { animation: rise 0.7s ease-out 0.12s both; }
+.cta-button { animation: rise 0.7s ease-out 0.18s both; position: relative; overflow: hidden; }
+
+.cta-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.22) 50%, transparent 70%);
+  background-size: 220% 100%;
+  background-position: 200% 0;
+  transition: none;
+  pointer-events: none;
+}
+.cta-button:hover::after { animation: shimmer-sweep 1.1s ease; }
+
+.feature-card {
+  animation: rise 0.6s ease-out both;
+  transition: transform 0.25s var(--cd-ease, ease), border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.feature-card:nth-child(1) { animation-delay: 0.22s; }
+.feature-card:nth-child(2) { animation-delay: 0.30s; }
+.feature-card:nth-child(3) { animation-delay: 0.38s; }
+.feature-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--cd-border-strong, rgba(56, 189, 248, 0.28));
+  box-shadow: 0 14px 30px -14px rgba(56, 189, 248, 0.35);
+}
+.feature-card svg { transition: transform 0.25s ease; }
+.feature-card:hover svg { transform: scale(1.12) rotate(-4deg); }
+
+.scan-terminal { animation: rise 0.7s ease-out 0.25s both; }
+.scan-terminal-bar .dot { transition: transform 0.2s ease; }
+
+@keyframes shimmer-sweep {
+  from { background-position: 200% 0; }
+  to { background-position: -20% 0; }
+}
+
+/* ---------- Command deck chrome: staggered entrance ---------- */
+
+.zdb-topbar { animation: rise 0.45s var(--cd-ease) both; }
+.zdb-mobile-tabs { animation: rise 0.45s var(--cd-ease) 0.04s both; }
+
+.command-body > .panel { animation: rise 0.5s var(--cd-ease) both; }
+.command-body > .zdb-left-panel { animation-delay: 0.05s; }
+.command-body > .zdb-editor-panel { animation-delay: 0.10s; }
+.command-body > .threat-panel { animation-delay: 0.15s; }
+
+.zdb-logo-chip { transition: transform 0.25s var(--cd-ease), box-shadow 0.25s ease; }
+.zdb-topbar-left:hover .zdb-logo-chip {
+  transform: rotate(-6deg) scale(1.06);
+  box-shadow: 0 0 22px -4px rgba(56, 189, 248, 0.8);
+}
+
+.zdb-mobile-tab { position: relative; }
+.zdb-mobile-tab::after {
+  content: '';
+  position: absolute;
+  left: 14%; right: 14%; bottom: 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  opacity: 0;
+  transition: transform 0.25s var(--cd-ease), opacity 0.25s ease;
+}
+.zdb-mobile-tab.active::after { transform: scaleX(1); opacity: 1; }
+
+.zdb-search { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.zdb-search:focus-within { box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12); }
+
+.zdb-export-btn, .zdb-avatar-btn, .zdb-icon-btn, .copy-btn, .zdb-file-scan-btn, .zdb-switch-repo-btn {
+  transition: transform 0.15s var(--cd-ease), background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.zdb-export-btn:not(:disabled):active,
+.zdb-icon-btn:not(:disabled):active,
+.copy-btn:not(:disabled):active,
+.zdb-avatar-btn:active { transform: scale(0.94); }
+
+.zdb-avatar-btn:hover:not(:disabled) { transform: translateY(-1px) rotate(-4deg); }
+.zdb-icon-btn:hover:not(:disabled) { transform: translateY(-1px); }
+
+.copy-btn.copied { animation: pop-check 0.35s var(--cd-ease); }
+@keyframes pop-check {
+  0% { transform: scale(0.85); }
+  55% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- Left panel: repo card + tree + explorer ---------- */
+
+.repo-card {
+  animation: rise 0.35s ease-out both;
+  transition: transform 0.15s var(--cd-ease), background 0.15s ease, color 0.15s ease;
+}
+.repo-card:hover { transform: translateX(2px); }
+.repo-card:nth-child(n) { animation-delay: calc(var(--i, 0) * 0.03s); }
+
+.zdb-repo-overview { animation: rise 0.4s ease-out both; }
+
+.zdb-scan-cta {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s var(--cd-ease), box-shadow 0.25s ease, filter 0.2s ease;
+}
+.zdb-scan-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.28) 50%, transparent 65%);
+  background-size: 220% 100%;
+  background-position: 200% 0;
+  pointer-events: none;
+}
+.zdb-scan-cta:not(:disabled):hover::before { animation: shimmer-sweep 1s ease; }
+.zdb-scan-cta:not(:disabled):hover { filter: brightness(1.05); }
+.zdb-scan-cta:not(:disabled):active { transform: scale(0.985); }
+
+.zdb-file-scan-btn:hover:not(:disabled) { transform: translateY(-1px); }
+
+.zdb-large-warn { animation: rise 0.35s ease-out both; }
+
+.zdb-tree-row {
+  transition: background 0.15s ease, color 0.15s ease, padding-left 0.15s ease;
+}
+.zdb-tree-row.zdb-tree-file { animation: rise 0.3s ease-out both; }
+.zdb-tree-dir svg:first-child { transition: transform 0.2s var(--cd-ease); }
+
+.zdb-tree-file.active {
+  animation: none;
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.zdb-file-badge { transition: transform 0.15s ease; }
+.zdb-tree-row:hover .zdb-file-badge { transform: scale(1.08); }
+
+.zdb-explorer-footer { animation: rise 0.4s ease-out 0.1s both; }
+.zdb-footer-metric span.ok { animation: pulse-dot 2.4s ease-in-out infinite; }
+
+/* ---------- Center: editor ---------- */
+
+.zdb-editor-header { animation: rise 0.4s ease-out both; }
+
+.zdb-code-scroll { animation: fade-in-soft 0.4s ease-out both; }
+.zdb-code-row { transition: background 0.15s ease; }
+
+.zdb-code-row.flagged {
+  animation: flag-sweep 0.5s var(--cd-ease) both;
+}
+@keyframes flag-sweep {
+  from { background-color: rgba(239, 68, 68, 0.22); }
+  to { background-color: rgba(239, 68, 68, 0.07); }
+}
+.zdb-code-row.flagged.high { animation-name: flag-sweep-high; }
+.zdb-code-row.flagged.medium { animation-name: flag-sweep-medium; }
+.zdb-code-row.flagged.low { animation-name: flag-sweep-low; }
+@keyframes flag-sweep-high {
+  from { background-color: rgba(249, 115, 22, 0.22); }
+  to { background-color: rgba(249, 115, 22, 0.07); }
+}
+@keyframes flag-sweep-medium {
+  from { background-color: rgba(234, 179, 8, 0.22); }
+  to { background-color: rgba(234, 179, 8, 0.07); }
+}
+@keyframes flag-sweep-low {
+  from { background-color: rgba(59, 130, 246, 0.22); }
+  to { background-color: rgba(59, 130, 246, 0.07); }
+}
+
+.zdb-inline-alert {
+  animation: rise 0.35s var(--cd-ease) both;
+}
+.zdb-inline-alert svg { animation: pulse-dot 1.8s ease-in-out infinite; }
+
+.inspector-empty { animation: fade-in-soft 0.4s ease-out both; }
+
+.zdb-spinner-sm {
+  animation: zdb-spin 0.7s linear infinite;
+}
+
+@keyframes fade-in-soft {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ---------- Right: threat intelligence ---------- */
+
+.zdb-threat-head { animation: rise 0.4s ease-out both; }
+
+.zdb-risk-gauge-wrap { animation: rise 0.45s var(--cd-ease) 0.05s both; }
+
+.zdb-gauge-value {
+  animation: gauge-draw 0.9s var(--cd-ease) 0.15s both;
+}
+@keyframes gauge-draw {
+  from { stroke-dashoffset: 157.08; }
+}
+
+.zdb-risk-score { animation: rise 0.4s ease-out 0.2s both; }
+.zdb-risk-band {
+  animation: rise 0.4s ease-out 0.25s both;
+}
+.zdb-risk-band.critical { animation: rise 0.4s ease-out 0.25s both, pulse-dot 2.2s ease-in-out 0.6s infinite; }
+
+.zdb-severity-counts { }
+.zdb-sev-count {
+  animation: rise 0.35s ease-out both;
+  transition: transform 0.15s var(--cd-ease), border-color 0.15s ease;
+}
+.zdb-sev-count:nth-child(1) { animation-delay: 0.28s; }
+.zdb-sev-count:nth-child(2) { animation-delay: 0.33s; }
+.zdb-sev-count:nth-child(3) { animation-delay: 0.38s; }
+.zdb-sev-count:nth-child(4) { animation-delay: 0.43s; }
+.zdb-sev-count:hover { transform: translateY(-2px); border-color: var(--cd-border-strong); }
+
+.zdb-sev-dot.critical { animation: pulse-dot 1.8s ease-in-out infinite; }
+
+.zdb-findings-head { animation: fade-in-soft 0.4s ease-out 0.3s both; }
+
+/* Finding cards: staggered entrance + smooth accordion open/close */
+
+.finding-card {
+  animation: rise 0.4s var(--cd-ease) both;
+  transition: box-shadow 0.2s ease, transform 0.15s var(--cd-ease);
+}
+.finding-card:nth-of-type(1) { animation-delay: 0.30s; }
+.finding-card:nth-of-type(2) { animation-delay: 0.35s; }
+.finding-card:nth-of-type(3) { animation-delay: 0.40s; }
+.finding-card:nth-of-type(4) { animation-delay: 0.45s; }
+.finding-card:nth-of-type(n+5) { animation-delay: 0.48s; }
+.finding-card:hover { transform: translateY(-1px); }
+
+.zdb-finding-acc-head { transition: background 0.15s ease; }
+.zdb-acc-chevron { transition: transform 0.25s var(--cd-ease), color 0.2s ease; }
+
+/* Smooth expand/collapse without a JSX height measurement:
+   the body becomes a single-row CSS grid so its track can animate
+   from 0fr to 1fr; overflow stays hidden on the (implicit) row box. */
+.zdb-finding-acc-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.32s var(--cd-ease), opacity 0.25s ease, padding-bottom 0.32s var(--cd-ease);
+  opacity: 1;
+}
+.zdb-finding-acc-body.zdb-collapsed {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  padding-bottom: 0;
+}
+.zdb-finding-acc-body > * { min-height: 0; overflow: hidden; }
+.zdb-finding-acc-body.zdb-collapsed > * { overflow: hidden; }
+
+.zdb-finding-acc.open .finding-title,
+.zdb-finding-acc.open .zdb-finding-acc-title { color: var(--text-1); }
+
+.zdb-cvss-pill { transition: transform 0.15s ease; }
+.zdb-finding-acc-head:hover .zdb-cvss-pill { transform: scale(1.05); }
+
+.zdb-file-jump { transition: transform 0.15s var(--cd-ease), background 0.15s ease; }
+.zdb-file-jump:hover { transform: translateX(2px); }
+
+.fix-box-wrap { animation: fade-in-soft 0.3s ease-out both; }
+
+.zdb-apply-btn { position: relative; overflow: hidden; }
+.zdb-apply-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.3) 50%, transparent 65%);
+  background-size: 220% 100%;
+  background-position: 200% 0;
+  pointer-events: none;
+}
+.zdb-apply-btn:not(:disabled):hover::after { animation: shimmer-sweep 0.9s ease; }
+
+.loading-card { animation: fade-in-soft 0.3s ease-out both; }
+.skeleton-row {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, var(--cd-panel-solid, #0c0f18) 25%, rgba(255,255,255,0.06) 50%, var(--cd-panel-solid, #0c0f18) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.empty-state { animation: fade-in-soft 0.4s ease-out both; }
+
+/* ---------- Mobile pane transitions ---------- */
+
+@media screen and (max-width: 1024px) {
+  .command-body > [data-pane] { animation: rise 0.3s ease-out both; }
+}
+
+/* Never animate anything inside the printed report */
+@media print {
+  * { animation: none !important; transition: none !important; }
+}
