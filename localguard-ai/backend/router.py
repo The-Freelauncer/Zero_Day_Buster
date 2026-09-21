@@ -1,7 +1,7 @@
 import os
 import json
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 import tree_sitter
 from tree_sitter import Language, Parser
@@ -9,8 +9,9 @@ import tree_sitter_python as tspython
 
 router = APIRouter()
 
-GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "Ov23li4vw6hti4CAZl5Q")
-GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "ed629543469ed0927a6d169bdaff03fb9e674f30")
+# Strictly read from environment variables (No hardcoded fallback secrets)
+GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
+GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 
 PY_LANGUAGE = Language(tspython.language())
@@ -24,19 +25,26 @@ else:
 class RepoAuditRequest(BaseModel):
     owner: str
     repo: str
-    token: str
 
 class FileAuditRequest(BaseModel):
     owner: str
     repo: str
     path: str
-    token: str
 
 class OAuthRequest(BaseModel):
     code: str
 
+def extract_bearer_token(authorization: str) -> str:
+    """Helper to extract token from 'Bearer <token>' header."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+    return authorization.replace("Bearer ", "").strip()
+
 @router.post("/auth/github")
 async def github_auth(data: OAuthRequest):
+    if not GITHUB_CLIENT_ID or not GITHUB_CLIENT_SECRET:
+        raise HTTPException(status_code=500, detail="GitHub OAuth credentials not configured on server")
+
     async with httpx.AsyncClient() as client:
         res = await client.post(
             "https://github.com/login/oauth/access_token",
@@ -61,7 +69,8 @@ async def github_auth(data: OAuthRequest):
         return {"token": token_data["access_token"]}
 
 @router.get("/github/repos")
-async def get_user_repos(token: str):
+async def get_user_repos(authorization: str = Header(...)):
+    token = extract_bearer_token(authorization)
     async with httpx.AsyncClient() as client:
         res = await client.get(
             "https://api.github.com/user/repos?sort=updated&per_page=20",
@@ -70,7 +79,8 @@ async def get_user_repos(token: str):
         return res.json()
 
 @router.get("/github/tree")
-async def get_repo_tree(owner: str, repo: str, token: str):
+async def get_repo_tree(owner: str, repo: str, authorization: str = Header(...)):
+    token = extract_bearer_token(authorization)
     async with httpx.AsyncClient() as client:
         res = await client.get(
             f"https://api.github.com/repos/{owner}/{repo}/git/trees/main?recursive=1",
@@ -82,7 +92,8 @@ async def get_repo_tree(owner: str, repo: str, token: str):
         return {"files": files}
 
 @router.get("/github/file")
-async def get_file_content(owner: str, repo: str, path: str, token: str):
+async def get_file_content(owner: str, repo: str, path: str, authorization: str = Header(...)):
+    token = extract_bearer_token(authorization)
     async with httpx.AsyncClient() as client:
         res = await client.get(
             f"https://raw.githubusercontent.com/{owner}/{repo}/main/{path}",
@@ -91,12 +102,12 @@ async def get_file_content(owner: str, repo: str, path: str, token: str):
         return {"content": res.text}
 
 @router.post("/audit-file")
-async def audit_single_file(req: FileAuditRequest):
-    """Audits a single file instantly."""
+async def audit_single_file(req: FileAuditRequest, authorization: str = Header(...)):
+    token = extract_bearer_token(authorization)
     async with httpx.AsyncClient(timeout=120.0) as client:
         res = await client.get(
             f"https://raw.githubusercontent.com/{req.owner}/{req.repo}/main/{req.path}",
-            headers={"Authorization": f"token {req.token}"}
+            headers={"Authorization": f"token {token}"}
         )
         code = res.text
         if not code or not code.strip():
@@ -132,9 +143,9 @@ async def audit_single_file(req: FileAuditRequest):
     }
 
 @router.post("/audit-repo")
-async def audit_full_repo(req: RepoAuditRequest):
-    """Scans all supported code files across the repository."""
-    tree_res = await get_repo_tree(req.owner, req.repo, req.token)
+async def audit_full_repo(req: RepoAuditRequest, authorization: str = Header(...)):
+    token = extract_bearer_token(authorization)
+    tree_res = await get_repo_tree(req.owner, req.repo, authorization=f"Bearer {token}")
     files = tree_res.get("files", [])
 
     all_findings = []
@@ -147,7 +158,7 @@ async def audit_full_repo(req: RepoAuditRequest):
             try:
                 res = await client.get(
                     f"https://raw.githubusercontent.com/{req.owner}/{req.repo}/main/{path}",
-                    headers={"Authorization": f"token {req.token}"}
+                    headers={"Authorization": f"token {token}"}
                 )
                 code = res.text
                 if not code or not code.strip():

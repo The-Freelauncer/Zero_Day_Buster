@@ -7,8 +7,9 @@ import {
   Database, Network, Play, MoreHorizontal, ClipboardCheck, Layers, ShieldAlert, X
 } from 'lucide-react';
 
-const API_BASE = "http://localhost:8000/api";
-const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || "YOUR_GITHUB_CLIENT_ID";
+// Read API_BASE dynamically from environment
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000/api";
+const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || "";
 
 const FILE_ACCENTS = {
   py: '#eab308', js: '#facc15', ts: '#38bdf8', tsx: '#38bdf8', jsx: '#facc15',
@@ -21,7 +22,6 @@ function getFileAccent(path) {
   return FILE_ACCENTS[ext] || '#64748b';
 }
 
-/* Short language-specific glyph used as the file icon in the explorer tree */
 const FILE_GLYPHS = {
   py: 'py', js: 'JS', jsx: 'JS', ts: 'TS', tsx: 'TS', json: '{}',
   html: '<>', css: '#', go: 'go', java: 'J', php: 'php', rb: 'rb',
@@ -69,7 +69,6 @@ function timeAgo(dateStr) {
   return `${days}d ago`;
 }
 
-/* GitHub reports repo size in KB */
 function formatRepoSize(kb) {
   if (kb === undefined || kb === null || Number.isNaN(Number(kb))) return null;
   const n = Number(kb);
@@ -98,10 +97,6 @@ function buildFileTree(fileList) {
   return root;
 }
 
-/* ------------------------------------------------------------------
-   Lightweight syntax tokenizer for the IDE canvas.
-   Purely presentational — never touches code content or state.
------------------------------------------------------------------- */
 const CODE_KEYWORDS = new Set([
   'import', 'from', 'as', 'class', 'def', 'return', 'if', 'else', 'elif', 'for', 'while',
   'try', 'except', 'finally', 'raise', 'with', 'in', 'not', 'and', 'or', 'is', 'pass',
@@ -148,9 +143,6 @@ function findingId(f, idx) {
   return f?.id || f?.finding_id || `ZDB-${2000 + idx}`;
 }
 
-/* ------------------------------------------------------------------
-   Brand mark — futuristic geometric shield with a glowing core node
------------------------------------------------------------------- */
 function ZeroDayLogo({ size = 26 }) {
   return (
     <svg
@@ -173,31 +165,14 @@ function ZeroDayLogo({ size = 26 }) {
           <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
         </radialGradient>
       </defs>
-
-      {/* shield body */}
-      <path
-        d="M20 2 L35 8 V19 C35 28.5 28.8 35.6 20 38 C11.2 35.6 5 28.5 5 19 V8 Z"
-        fill="url(#zdb-logo-grad)"
-        opacity="0.16"
-      />
-      <path
-        d="M20 2 L35 8 V19 C35 28.5 28.8 35.6 20 38 C11.2 35.6 5 28.5 5 19 V8 Z"
-        stroke="url(#zdb-logo-grad)"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-        fill="none"
-      />
-
-      {/* circuit traces converging on the core */}
-      <path d="M20 8.5 V15.5 M11.5 14 L16.4 17.2 M28.5 14 L23.6 17.2 M14.5 27 L17.8 21.8 M25.5 27 L22.2 21.8"
-        stroke="url(#zdb-logo-grad)" strokeWidth="1.15" strokeLinecap="round" opacity="0.85" />
+      <path d="M20 2 L35 8 V19 C35 28.5 28.8 35.6 20 38 C11.2 35.6 5 28.5 5 19 V8 Z" fill="url(#zdb-logo-grad)" opacity="0.16" />
+      <path d="M20 2 L35 8 V19 C35 28.5 28.8 35.6 20 38 C11.2 35.6 5 28.5 5 19 V8 Z" stroke="url(#zdb-logo-grad)" strokeWidth="1.7" strokeLinejoin="round" fill="none" />
+      <path d="M20 8.5 V15.5 M11.5 14 L16.4 17.2 M28.5 14 L23.6 17.2 M14.5 27 L17.8 21.8 M25.5 27 L22.2 21.8" stroke="url(#zdb-logo-grad)" strokeWidth="1.15" strokeLinecap="round" opacity="0.85" />
       <circle cx="11.5" cy="14" r="1.25" fill="#38bdf8" />
       <circle cx="28.5" cy="14" r="1.25" fill="#818cf8" />
       <circle cx="14.5" cy="27" r="1.25" fill="#818cf8" />
       <circle cx="25.5" cy="27" r="1.25" fill="#38bdf8" />
       <circle cx="20" cy="8.5" r="1.25" fill="#7dd3fc" />
-
-      {/* glowing central node */}
       <circle cx="20" cy="19.2" r="6.4" fill="url(#zdb-logo-core)" opacity="0.55" />
       <circle cx="20" cy="19.2" r="3.4" stroke="#bae6fd" strokeWidth="1.1" fill="none" opacity="0.8" />
       <circle cx="20" cy="19.2" r="1.7" fill="#f0f9ff" />
@@ -206,7 +181,7 @@ function ZeroDayLogo({ size = 26 }) {
 }
 
 const SEVERITY_ORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
-const LARGE_REPO_THRESHOLD = 15; // Set boundary for large repository warning
+const LARGE_REPO_THRESHOLD = 15;
 
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem("gh_token") || "");
@@ -226,11 +201,15 @@ export default function App() {
   const [expandedDirs, setExpandedDirs] = useState(() => new Set());
   const [expandedFindingIdx, setExpandedFindingIdx] = useState(0);
 
-  /* purely presentational: which pane is visible on phones/tablets */
   const [mobilePane, setMobilePane] = useState('explorer');
 
   const authAttempted = React.useRef(false);
   const searchInputRef = React.useRef(null);
+
+  // Helper for Authorization Headers
+  const getAuthHeader = () => ({
+    headers: { Authorization: `Bearer ${token}` }
+  });
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -257,7 +236,7 @@ export default function App() {
 
   useEffect(() => {
     if (token) {
-      axios.get(`${API_BASE}/github/repos?token=${token}`)
+      axios.get(`${API_BASE}/github/repos`, getAuthHeader())
         .then(res => {
           const repoData = Array.isArray(res.data) ? res.data : (res.data.items || []);
           setRepos(repoData);
@@ -274,7 +253,6 @@ export default function App() {
     }
   }, [token]);
 
-  /* ⌘K / Ctrl+K focuses the quick-search field (UI only) */
   useEffect(() => {
     const onKey = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -293,7 +271,7 @@ export default function App() {
     setCodeContent("");
     setSelectedFile("");
     const owner = repo.owner?.login || repo.owner;
-    axios.get(`${API_BASE}/github/tree?owner=${owner}&repo=${repo.name}&token=${token}`)
+    axios.get(`${API_BASE}/github/tree?owner=${owner}&repo=${repo.name}`, getAuthHeader())
       .then(res => setFiles(res.data.files || []))
       .catch(err => console.error("Tree fetch error:", err));
   };
@@ -301,7 +279,7 @@ export default function App() {
   const handleSelectFile = (filePath) => {
     setSelectedFile(filePath);
     const owner = selectedRepo.owner?.login || selectedRepo.owner;
-    axios.get(`${API_BASE}/github/file?owner=${owner}&repo=${selectedRepo.name}&path=${filePath}&token=${token}`)
+    axios.get(`${API_BASE}/github/file?owner=${owner}&repo=${selectedRepo.name}&path=${filePath}`, getAuthHeader())
       .then(res => setCodeContent(res.data.content || ""))
       .catch(err => console.error("File content error:", err));
   };
@@ -316,9 +294,8 @@ export default function App() {
     axios.post(`${API_BASE}/audit-file`, {
       owner: owner,
       repo: selectedRepo.name,
-      path: selectedFile,
-      token: token
-    })
+      path: selectedFile
+    }, getAuthHeader())
       .then(res => {
         setRepoResults(res.data);
         setLoading(false);
@@ -332,15 +309,14 @@ export default function App() {
   const handleRunFullRepoAudit = () => {
     if (!selectedRepo) return;
     setLoading(true);
-    setLoadingText("Scanning full repository files via local GPU...");
+    setLoadingText("Scanning full repository files via GPU...");
     setRepoResults(null);
 
     const owner = selectedRepo.owner?.login || selectedRepo.owner;
     axios.post(`${API_BASE}/audit-repo`, {
       owner: owner,
-      repo: selectedRepo.name,
-      token: token
-    }, { timeout: 600000 })
+      repo: selectedRepo.name
+    }, { ...getAuthHeader(), timeout: 600000 })
       .then(res => {
         setRepoResults(res.data || {});
         setLoading(false);
@@ -348,7 +324,7 @@ export default function App() {
       .catch(err => {
         console.error("Audit error:", err);
         setLoading(false);
-        alert("Scan timed out or failed. Check if Ollama is running locally.");
+        alert("Scan timed out or failed. Check backend configuration.");
       });
   };
 
@@ -427,7 +403,6 @@ export default function App() {
     return repoResults.findings.filter(f => f && f.file_path === selectedFile);
   }, [repoResults, selectedFile]);
 
-  /* line number -> finding, for the inline editor alert banner */
   const lineFindingMap = useMemo(() => {
     const map = {};
     currentFileFindings.forEach(f => {
@@ -526,7 +501,6 @@ export default function App() {
   return (
     <div className="app-shell">
       {showLanding && !token ? (
-        /* ============ LANDING / HERO (structure preserved) ============ */
         <div className="landing">
           <div className="landing-inner">
             <div className="landing-copy">
@@ -547,10 +521,7 @@ export default function App() {
           </div>
         </div>
       ) : (
-        /* ==================== COMMAND DECK ==================== */
         <div className="command-deck">
-
-          {/* ---------- TOP BAR ---------- */}
           <header className="no-print zdb-topbar">
             <div className="zdb-topbar-left">
               <span className="zdb-logo-chip"><ZeroDayLogo size={22} /></span>
@@ -601,7 +572,6 @@ export default function App() {
             </div>
           </header>
 
-          {/* ---------- MOBILE / TABLET PANE SWITCHER ---------- */}
           <nav className="no-print zdb-mobile-tabs" aria-label="Workspace panes">
             <button
               className={`zdb-mobile-tab ${mobilePane === 'explorer' ? 'active' : ''}`}
@@ -625,8 +595,6 @@ export default function App() {
           </nav>
 
           <div className={`command-body pane-${mobilePane}`}>
-
-            {/* =========== LEFT: REPO METADATA + EXPLORER =========== */}
             <aside className="no-print panel zdb-left-panel" data-pane="explorer">
               <div className="zdb-panel-caption">
                 <span>Repository</span>
@@ -666,7 +634,6 @@ export default function App() {
                     </button>
                   </div>
 
-                  {/* LARGE REPO WARNING BANNER */}
                   {isLargeRepo && (
                     <div className="zdb-large-warn">
                       <div className="zdb-large-warn-head">
@@ -747,7 +714,6 @@ export default function App() {
               </div>
             </aside>
 
-            {/* =========== CENTER: IDE / CODE CANVAS =========== */}
             <section className="no-print panel zdb-editor-panel" data-pane="code">
               <div className="zdb-editor-header">
                 <div className="inspector-dots">
@@ -822,7 +788,6 @@ export default function App() {
                     })}
                   </div>
 
-                  {/* fallback banner when the model reports no line number */}
                   {topFileFinding && Object.keys(lineFindingMap).length === 0 && (
                     <div className={`zdb-inline-alert ${getSeverityClass((topFileFinding.severity || '').toUpperCase())}`}>
                       <AlertTriangle size={13} />
@@ -854,7 +819,6 @@ export default function App() {
               </div>
             </section>
 
-            {/* =========== RIGHT: THREAT INTELLIGENCE =========== */}
             <section className="print-full-width panel threat-panel" data-pane="threats">
               <div className="no-print zdb-threat-head">
                 <h3 className="scorecard-title">
@@ -871,7 +835,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* print-only report header */}
               <div className="print-only zdb-print-header" style={{ display: 'none' }}>
                 <h1>Zero Day Buster — Executive Security Report</h1>
                 <p>
@@ -898,7 +861,6 @@ export default function App() {
 
               {repoResults && (
                 <>
-                  {/* ---- Aggregate risk dial ---- */}
                   <div className="zdb-risk-gauge-wrap">
                     <div className="zdb-risk-gauge-caption">
                       <span className="zdb-risk-gauge-label">Aggregate Risk Score</span>
@@ -922,7 +884,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* ---- Severity breakdown ---- */}
                   <div className="zdb-severity-counts">
                     {[
                       { key: 'CRITICAL', label: 'CRIT', cls: 'critical' },
@@ -943,7 +904,6 @@ export default function App() {
                     <span className="dim mono">Sorted by CVSS</span>
                   </div>
 
-                  {/* ---- Accordion finding cards ---- */}
                   {sortedFindings.length === 0 && (
                     <div className="empty-state">
                       No vulnerabilities detected in this scan.<br />
