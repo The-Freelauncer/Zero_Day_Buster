@@ -151,31 +151,46 @@ function ZeroDayLogo({ size = 26 }) {
       viewBox="0 0 40 40"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
       className="zdb-logo-svg"
     >
       <defs>
-        <linearGradient id="zdb-logo-grad" x1="4" y1="2" x2="36" y2="38" gradientUnits="userSpaceOnUse">
+        <linearGradient id="zdb-shield-grad" x1="4" y1="2" x2="36" y2="38" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#6366f1" />
+        </linearGradient>
+        <linearGradient id="zdb-core-grad" x1="12" y1="10" x2="28" y2="28" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#38bdf8" />
           <stop offset="100%" stopColor="#818cf8" />
         </linearGradient>
-        <radialGradient id="zdb-logo-core" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#f0f9ff" stopOpacity="1" />
-          <stop offset="60%" stopColor="#7dd3fc" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
-        </radialGradient>
       </defs>
-      <path d="M20 2 L35 8 V19 C35 28.5 28.8 35.6 20 38 C11.2 35.6 5 28.5 5 19 V8 Z" fill="url(#zdb-logo-grad)" opacity="0.16" />
-      <path d="M20 2 L35 8 V19 C35 28.5 28.8 35.6 20 38 C11.2 35.6 5 28.5 5 19 V8 Z" stroke="url(#zdb-logo-grad)" strokeWidth="1.7" strokeLinejoin="round" fill="none" />
-      <path d="M20 8.5 V15.5 M11.5 14 L16.4 17.2 M28.5 14 L23.6 17.2 M14.5 27 L17.8 21.8 M25.5 27 L22.2 21.8" stroke="url(#zdb-logo-grad)" strokeWidth="1.15" strokeLinecap="round" opacity="0.85" />
-      <circle cx="11.5" cy="14" r="1.25" fill="#38bdf8" />
-      <circle cx="28.5" cy="14" r="1.25" fill="#818cf8" />
-      <circle cx="14.5" cy="27" r="1.25" fill="#818cf8" />
-      <circle cx="25.5" cy="27" r="1.25" fill="#38bdf8" />
-      <circle cx="20" cy="8.5" r="1.25" fill="#7dd3fc" />
-      <circle cx="20" cy="19.2" r="6.4" fill="url(#zdb-logo-core)" opacity="0.55" />
-      <circle cx="20" cy="19.2" r="3.4" stroke="#bae6fd" strokeWidth="1.1" fill="none" opacity="0.8" />
-      <circle cx="20" cy="19.2" r="1.7" fill="#f0f9ff" />
+
+      {/* Outer Shield Boundary */}
+      <path
+        d="M20 3 L35 8.5 V18.5 C35 28.2 28.5 35.5 20 38 C11.5 35.5 5 28.2 5 18.5 V8.5 L20 3 Z"
+        fill="url(#zdb-shield-grad)"
+        fillOpacity="0.12"
+        stroke="url(#zdb-shield-grad)"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+
+      {/* Inner Circuit Node Network */}
+      <path
+        d="M20 10 V16 M14 13 L18 16 M26 13 L22 16 M15 25 L18 21 M25 25 L22 21"
+        stroke="url(#zdb-core-grad)"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+
+      {/* Zero Day Core Node */}
+      <circle cx="20" cy="18.5" r="4.5" fill="url(#zdb-core-grad)" />
+      <circle cx="20" cy="18.5" r="2" fill="#f0f9ff" />
+
+      {/* Circuit Endpoints */}
+      <circle cx="14" cy="13" r="1.2" fill="#38bdf8" />
+      <circle cx="26" cy="13" r="1.2" fill="#818cf8" />
+      <circle cx="15" cy="25" r="1.2" fill="#818cf8" />
+      <circle cx="25" cy="25" r="1.2" fill="#38bdf8" />
     </svg>
   );
 }
@@ -199,7 +214,7 @@ export default function App() {
   const [copiedFindingIdx, setCopiedFindingIdx] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedDirs, setExpandedDirs] = useState(() => new Set());
-  const [expandedFindingIdx, setExpandedFindingIdx] = useState(0);
+  const [expandedFindingIdx, setExpandedFindingIdx] = useState(-1);
 
   const [mobilePane, setMobilePane] = useState('explorer');
 
@@ -912,81 +927,83 @@ export default function App() {
                   )}
 
                   {sortedFindings.map((item, idx) => {
-                    const sevClass = getSeverityClass((item.severity || '').toUpperCase());
-                    const isOpen = expandedFindingIdx === idx;
-                    const ln = findingLineNumber(item);
-                    return (
-                      <div
-                        key={idx}
-                        className={`finding-card zdb-finding-acc ${sevClass} ${isOpen ? 'open' : ''}`}
-                      >
-                        <div
-                          className="zdb-finding-acc-head"
-                          onClick={() => setExpandedFindingIdx(isOpen ? -1 : idx)}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => { if (e.key === 'Enter') setExpandedFindingIdx(isOpen ? -1 : idx); }}
-                        >
-                          <ChevronRight size={14} className="zdb-acc-chevron" />
-                          <span className="zdb-finding-acc-title">{item.issue}</span>
-                          <span className={`zdb-cvss-pill ${sevClass}`}>CVSS {item.cvss ?? '—'}</span>
-                        </div>
+  const sevClass = getSeverityClass((item.severity || '').toUpperCase());
+  const isOpen = expandedFindingIdx === idx;
+  const ln = findingLineNumber(item);
+  return (
+    <div
+      key={idx}
+      className={`finding-card zdb-finding-acc ${sevClass} ${isOpen ? 'open' : ''}`}
+    >
+      <div
+        className="zdb-finding-acc-head"
+        onClick={() => setExpandedFindingIdx(isOpen ? -1 : idx)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter') setExpandedFindingIdx(isOpen ? -1 : idx); }}
+      >
+        <ChevronRight size={14} className="zdb-acc-chevron" />
+        <span className="zdb-finding-acc-title">{item.issue}</span>
+        <span className={`zdb-cvss-pill ${sevClass}`}>CVSS {item.cvss ?? '—'}</span>
+      </div>
 
-                        <div className={`zdb-finding-acc-body ${isOpen ? '' : 'zdb-collapsed'}`}>
-                          <div className="zdb-finding-acc-meta">
-                            <span className="mono dim">{findingId(item, idx)}</span>
-                            <span className="zdb-dot-sep" />
-                            {ln && <><span className="mono dim">Line {ln}</span><span className="zdb-dot-sep" /></>}
-                            {item.cwe && <span className="zdb-cwe-badge">{item.cwe}</span>}
-                            <span className={`severity-badge ${sevClass}`}>
-                              {(item.severity || 'LOW').toUpperCase()}
-                            </span>
-                          </div>
+      <div className={`zdb-finding-acc-body ${isOpen ? 'zdb-expanded' : 'zdb-collapsed'}`}>
+        <div className="zdb-acc-inner">
+          <div className="zdb-finding-acc-meta">
+            <span className="mono dim">{findingId(item, idx)}</span>
+            <span className="zdb-dot-sep" />
+            {ln && <><span className="mono dim">Line {ln}</span><span className="zdb-dot-sep" /></>}
+            {item.cwe && <span className="zdb-cwe-badge">{item.cwe}</span>}
+            <span className={`severity-badge ${sevClass}`}>
+              {(item.severity || 'LOW').toUpperCase()}
+            </span>
+          </div>
 
-                          {item.file_path && (
-                            <button
-                              className="zdb-file-jump"
-                              onClick={() => openFileFromFinding(item.file_path)}
-                              title="Open this file in the editor"
-                            >
-                              <FileCode size={12} /> {item.file_path}
-                            </button>
-                          )}
+          {item.file_path && (
+            <button
+              className="zdb-file-jump"
+              onClick={() => openFileFromFinding(item.file_path)}
+              title="Open this file in the editor"
+            >
+              <FileCode size={12} /> {item.file_path}
+            </button>
+          )}
 
-                          {(item.description || item.explanation || item.detail) && (
-                            <div className="advice-box">
-                              {item.description || item.explanation || item.detail}
-                            </div>
-                          )}
+          {(item.description || item.explanation || item.detail) && (
+            <div className="advice-box">
+              {item.description || item.explanation || item.detail}
+            </div>
+          )}
 
-                          {item.fix && (
-                            <div className="fix-box-wrap">
-                              <p className="block-label">
-                                <span>SUGGESTED PATCH</span>
-                                <button
-                                  className={`copy-btn ${copiedFindingIdx === idx ? 'copied' : ''}`}
-                                  onClick={() => handleCopyFix(item.fix, idx)}
-                                >
-                                  {copiedFindingIdx === idx ? <Check size={11} /> : <Copy size={11} />}
-                                </button>
-                              </p>
-                              <pre className="fix-box">{item.fix}</pre>
-                            </div>
-                          )}
+          {item.fix && (
+            <div className="fix-box-wrap">
+              <p className="block-label">
+                <span>SUGGESTED PATCH</span>
+                <button
+                  className={`copy-btn ${copiedFindingIdx === idx ? 'copied' : ''}`}
+                  onClick={() => handleCopyFix(item.fix, idx)}
+                >
+                  {copiedFindingIdx === idx ? <Check size={11} /> : <Copy size={11} />}
+                </button>
+              </p>
+              <pre className="fix-box">{item.fix}</pre>
+            </div>
+          )}
 
-                          <button
-                            className="zdb-apply-btn no-print"
-                            onClick={() => handleCopyFix(item.fix, idx)}
-                            disabled={!item.fix}
-                          >
-                            {copiedFindingIdx === idx
-                              ? <><ClipboardCheck size={14} /> Patch copied to clipboard</>
-                              : <><Wand2 size={14} /> Apply remediation</>}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+          <button
+            className="zdb-apply-btn no-print"
+            onClick={() => handleCopyFix(item.fix, idx)}
+            disabled={!item.fix}
+          >
+            {copiedFindingIdx === idx
+              ? <><ClipboardCheck size={14} /> Patch copied to clipboard</>
+              : <><Wand2 size={14} /> Apply remediation</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+})}
                 </>
               )}
             </section>
