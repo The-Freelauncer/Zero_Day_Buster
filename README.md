@@ -82,6 +82,18 @@ ollama create local-sec-reviewer -f Modelfile
 
 ```
 
+🔑 GitHub OAuth Setup
+To enable repository browsing and single-click file fetching, register a GitHub OAuth App:
+
+1.Go to your GitHub Settings → Developer Settings → OAuth Apps → New OAuth App.
+2.Fill in the following application settings:
+3.Application Name: ```Zero Day Buster ```
+4.Homepage URL: ```http://localhost:5173```
+5.Authorization Callback URL: ```http://localhost:5173```
+
+Click Register Application.
+Copy your Client ID and generate a new Client Secret. Keep these ready for step 2 in the Quickstart guide below.
+
 🚀 Quickstart & Setup Guide
 1. Clone the Repository
 
@@ -95,6 +107,12 @@ Create a .env file inside the backend/ directory:
 GITHUB_CLIENT_ID=your_github_oauth_client_id
 GITHUB_CLIENT_SECRET=your_github_oauth_client_secret
 OLLAMA_URL=http://localhost:11434/api/generate
+```
+Frontend Configuration:
+Create a .env file inside the frontend/ directory:
+``` bash
+VITE_API_BASE=http://localhost:8000/api
+VITE_GITHUB_CLIENT_ID=your_github_oauth_client_id
 ```
 
 3. Setup Backend (FastAPI)
